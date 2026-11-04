@@ -1,0 +1,2 @@
+       FD DB-CONFIG-FILE.
+       01 DB-CONFIG-LINE PIC X(768).

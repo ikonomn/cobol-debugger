@@ -1,0 +1,4 @@
+build/
+bin/
+config/worldcities-sqlite.conf
+__pycache__/

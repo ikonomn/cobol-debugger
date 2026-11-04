@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "easter",
+  "defaults": {
+    "enabled": true,
+    "flags": null,
+    "environment": {},
+    "copybook_paths": null,
+    "listing": {
+      "enabled": true,
+      "filename": "build/{stem}.lst"
+    }
+  },
+  "sources": {},
+  "runtime": {
+    "accepted": true,
+    "working_directory": ".",
+    "data_directories": []
+  },
+  "debug": {
+    "enabled": true
+  }
+}

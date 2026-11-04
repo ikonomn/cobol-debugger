@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "countries",
+  "defaults": {
+    "enabled": true,
+    "flags": null,
+    "environment": {},
+    "copybook_paths": [
+      "copybooks"
+    ],
+    "listing": {
+      "enabled": true,
+      "filename": "build/{stem}.lst"
+    }
+  },
+  "sources": {},
+  "runtime": {
+    "accepted": true,
+    "working_directory": "data",
+    "data_directories": [
+      "data"
+    ]
+  },
+  "debug": {
+    "enabled": true
+  }
+}

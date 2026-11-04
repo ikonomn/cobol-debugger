@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+logs/
+
+# Generated example artifacts (keep source and bundled input datasets).
+/examples/**/bin/
+/examples/**/debug_data/
+/examples/**/*.c
+/examples/**/*.h
+/examples/**/*.i
+/examples/**/*.o
+/examples/**/*.flowchart.pdf
+/examples/**/*.log
+/examples/easter/MV_FEASTS*.TXT
