@@ -797,3 +797,10 @@ Toolbar controls, Debugger/Program output/JSON events/Compiler tabs, program inp
 ### Default project runtime directory
 
 Project executables run with the project's bin/ folder as the working directory by default, including when runtime settings have not been accepted. An explicitly saved config/project.json runtime working_directory overrides it; an omitted working_directory defaults to bin. Data search paths remain separately configurable. Computing a build plan does not require bin to exist before the first build. No runtime files or databases are moved.
+
+
+### Native RPM and Windows release packaging
+
+Fedora 44 and Mageia 10 specs are provided under packaging/fedora and packaging/mageia. Matched two-application transfer kits are created from the OpenCobolIDE repository's packaging/make-modern12-transfer-kits.py; the IDE's packaging/RPM_MODERN12.md describes native prerequisites, build commands and collection of binary/source RPMs and logs. Native target builds/install/desktop tests remain pending. These are private local-test specs, not approved distro-repository packages; the existing unspecified project-license notice is retained as LicenseRef-Local-Test-Only.
+
+The application version remains 0.1.0, with native RPM build revision 1. Windows release deliverables will be a standalone .exe and an Inno Setup .exe installer; Windows build/testing and publication remain separate pending steps.
