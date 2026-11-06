@@ -15,4 +15,4 @@ Type values and menu choices in the native program terminal. Continue past an AC
 
 For an OpenCobolIDE project, enable Debug compilation and rebuild. Keep the matching generated files in the project's `debug_data/` directory. **Compile with debug** uses saved project settings for recognized projects. Programs normally run from `bin/`.
 
-Open **Help → About COBGDB → Examples** to find the installed graphical score example. Copy its folder to a writable location before building it. Follow the example's README for Linux and Windows commands and the suggested breakpoint.
+Open **Help → About COBGDB → Examples** to find the installed Hello, Easter, Countries, Graphical score and World Cities examples. Start with the examples index and copy the example you want to a writable location before building it.

@@ -15,9 +15,7 @@ SolidCompression=yes
 [Files]
 Source: "{#AppBinary}"; DestDir: "{app}"; DestName: "cobgdb-python-gui.exe"; Flags: ignoreversion
 
-Source: "{#ExampleFiles}\README.md"; DestDir: "{app}\examples\gui"
-Source: "{#ExampleFiles}\score.cob"; DestDir: "{app}\examples\gui"
-Source: "{#ExampleFiles}\score_window.c"; DestDir: "{app}\examples\gui"
+Source: "{#ExampleFiles}\*"; DestDir: "{app}\examples"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\COBGDB Python"; Filename: "{app}\cobgdb-python-gui.exe"

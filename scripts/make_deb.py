@@ -9,6 +9,8 @@ import shutil
 import subprocess
 import tempfile
 
+from stage_examples import stage_examples
+
 
 def write(root, name, content, mode=0o644):
     path = root/name
@@ -22,7 +24,7 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
-    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-6'
+    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-7'
     output = (args.output or source/'dist').resolve()
     output.mkdir(parents=True, exist_ok=True)
     package = output/f'cobgdb-python_{version}_all.deb'
@@ -54,7 +56,7 @@ StartupNotify=true
         docs.mkdir(parents=True)
         for name in ('README.md', 'DEVELOPMENT.md', 'RELEASE_NOTES.md'):
             shutil.copyfile(source/name, docs/name)
-        shutil.copytree(source/'examples/gui', docs/'examples/gui')
+        stage_examples(docs/'examples')
         write(root, 'usr/share/doc/cobgdb-python/README.Debian', '''COBGDB Python standalone debugger
 
 Launch from the applications menu or run cobgdb-python-gui.
@@ -62,7 +64,7 @@ Optionally: cobgdb-python-gui /path/to/executable [--source /path/to/source.cbl]
 The JSON backend command is cobgdb-python.
 Logs: ${XDG_STATE_HOME:-$HOME/.local/state}/cobgdb-python/logs/
 No OpenCobolIDE installation is required.
-Help > About COBGDB > Examples opens the installed graphical example.
+Help > About COBGDB > Examples opens the installed examples and their index.
 Copy the example into a writable project folder before compiling.
 GixSQL must be installed separately when compiling SQL programs.
 This is a local test package, not a published distribution.
@@ -76,7 +78,7 @@ is granted or inferred by the packaging script.
         changelog = f"""cobgdb-python ({version}) unstable; urgency=medium
 
   * Add offline Help, About, installed example access and a launcher icon.
-  * Open a native terminal for program I/O and ship the graphical example.
+  * Open a native terminal for program I/O and ship all five examples.
   * Preserve explicit project cwd overrides and themed interface icons.
   * Preserve optional executable and --source launcher arguments.
   * Preserve no-argument startup and independent engine/compiler behavior.

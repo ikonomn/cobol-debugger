@@ -1,6 +1,6 @@
 Name:           cobgdb-python
 Version:        0.1.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Independent graphical debugger for GnuCOBOL
 License:        LicenseRef-Local-Test-Only
 Source0:        %{name}-%{version}.tar.gz
@@ -33,8 +33,7 @@ install -pm 0644 cobgdb_python/*.py %{buildroot}%{python3_sitelib}/cobgdb_python
 install -d %{buildroot}%{python3_sitelib}/cobgdb_python/resources
 install -pm 0644 cobgdb_python/resources/* %{buildroot}%{python3_sitelib}/cobgdb_python/resources/
 install -Dpm 0644 cobgdb_python/resources/cobgdb.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/cobgdb-python.svg
-install -d %{buildroot}%{_docdir}/%{name}/examples/gui
-install -pm 0644 examples/gui/{README.md,score.cob,score_window.c} %{buildroot}%{_docdir}/%{name}/examples/gui/
+%{__python3} scripts/stage_examples.py %{buildroot}%{_docdir}/%{name}/examples
 install -d %{buildroot}%{_bindir}
 for entry in 'cobgdb-python backend' 'cobgdb-python-gui frontend'; do
     set -- $entry
@@ -72,6 +71,9 @@ PYTHONPATH=%{buildroot}%{python3_sitelib} QT_QPA_PLATFORM=offscreen %{__python3}
 %{_datadir}/applications/cobgdb-python.desktop
 
 %changelog
+* Fri Nov 06 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-4
+- Include all five examples and their input data.
+
 * Fri Nov 06 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-3
 - Add offline Help, About, installed example access and a launcher icon.
 

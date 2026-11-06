@@ -24,10 +24,10 @@ try {
         --specpath $Work @Extra (Join-Path $PSScriptRoot "launcher.py")
     if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed. Build work is in $Work" }
     $Binary = Join-Path $Output "cobgdb-python-gui.exe"
-    $Examples = (New-Item -ItemType Directory -Force (Join-Path $Output "examples/gui")).FullName
-    foreach ($File in @("README.md", "score.cob", "score_window.c")) {
-        Copy-Item (Join-Path $Repo "examples/gui/$File") $Examples -Force
-    }
+    $Examples = Join-Path $Work "examples"
+    & $Python (Join-Path $Repo "scripts/stage_examples.py") $Examples
+    if ($LASTEXITCODE -ne 0) { throw "Example staging failed. Build work is in $Work" }
+    Copy-Item -Path $Examples -Destination $Output -Recurse -Force
     & $InnoCompiler "/DAppBinary=$Binary" "/DExampleFiles=$Examples" "/O$Output" (Join-Path $PSScriptRoot "installer.iss")
     if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed. Build work is in $Work" }
     $Installer = Join-Path $Output "COBGDB-0.1.0-win11-x64-setup.exe"
