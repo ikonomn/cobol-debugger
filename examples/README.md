@@ -7,15 +7,16 @@ their source, generated files, and instructions stay together.
 | --- | --- | --- | --- |
 | [Hello](hello/README.md) | First breakpoint, Next COBOL line, variable changes | GnuCOBOL + GDB | `hello/hello.cob` |
 | [Easter](easter/README.md) | Input, calculations, grouped fields, report file | GnuCOBOL + GDB | `easter/easter.cbl` |
+| [Graphical score](gui/README.md) | Native window choices, COBOL breakpoints and variable inspection | GnuCOBOL + GDB + C compiler, with X11 development files on Linux or MinGW on Windows | `gui/score.cob` |
 | [World Cities](worldcities/README.md) | SQL cursor, row-by-row values, COPY members, larger program | GixSQL and SQLite driver, plus GnuCOBOL + GDB | `worldcities/src/select-greek-cities.cbl` |
 
-Suggested order: **Hello → Easter → World Cities**.
+**Suggested order**  Hello → Easter → Graphical score → World Cities.
 
 Use the per-example instructions to create an initial debug executable, then
 select it with **Executable**. The matching source opens automatically when
 available. Hello and Easter can then be recompiled with **Compile with debug**;
-World Cities uses its supplied build script because it needs GixSQL preprocessing
-and linkage.
+Graphical score uses the build commands in its guide to link the native C window bridge.
+World Cities uses its supplied build script for GixSQL preprocessing and linkage.
 
 **All compiled COBOL programs and modules need `-g -fsource-location -ftraceall
 -O0 -save-temps` for the supported debugging experience.** Keep generated C and
