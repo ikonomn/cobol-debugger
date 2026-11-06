@@ -2,12 +2,14 @@
 
 Extract the dedicated `cobgdb-python-0.1.0.tar.gz` source archive and work from its root. Build Windows separately on Windows 11 x64. The Windows release downloads are the standalone executable and Inno Setup installer.
 
-On Windows 11, use 64-bit Python with PyQt5 and PyInstaller 6.9 or newer. Install Inno Setup 6.3 or newer and locate ISCC.exe.
+On Windows 11, use 64-bit Python with PyQt5 and PyInstaller 6.9 or newer. Use your installed Inno Setup 7 command-line compiler, ISCC.exe.
 
 ```powershell
 python -m pip install "PyQt5>=5.15,<6" "PyInstaller>=6.9,<7"
-.\packaging\windows\build.ps1 -InnoCompiler 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+.\packaging\windows\build.ps1 -InnoCompiler 'C:\Program Files\Inno Setup 7\ISCC.exe'
 ```
+
+Adjust the compiler path to match your Inno Setup 7 installation.
 
 The script produces cobgdb-python-gui.exe, COBGDB-0.1.0-win11-x64-setup.exe and SHA256SUMS in dist/windows by default. The single executable includes the GUI, JSON protocol backend and independent project-build worker. It uses a console-capable bootloader for worker pipes. GDB, GnuCOBOL, its C compiler and optional GixSQL come from the native toolchain. The per-user installer registers the launcher so OpenCobolIDE can discover it.
 
