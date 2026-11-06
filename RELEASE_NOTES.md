@@ -14,3 +14,10 @@
 | Windows 11 x64 | cobgdb-python-gui.exe and Inno Setup installer | Native build and installer verification pending |
 
 The graphical example was exercised locally on Linux with GDB, a native terminal, a window click, a COBOL breakpoint, variable inspection and stepping to normal exit. See [the graphical example](examples/gui/README.md) and [Windows build instructions](packaging/windows/README.md).
+
+
+## Release files
+
+Keep the exact committed build source in the dedicated `cobgdb-python-0.1.0.tar.gz` archive, following the modern11.6 release layout. Record its commit ID and checksum alongside the release files.
+
+Build and verify Windows 11 separately. Its release downloads are the standalone executable and Inno Setup installer. Use the source archive for the Windows build instructions and recipes. Keep the Fedora and Mageia transfer kits and native build logs with the internal build records.

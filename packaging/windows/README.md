@@ -1,5 +1,7 @@
 # COBGDB 0.1.0 for Windows 11 x64
 
+Extract the dedicated `cobgdb-python-0.1.0.tar.gz` source archive and work from its root. Build Windows separately on Windows 11 x64. The Windows release downloads are the standalone executable and Inno Setup installer.
+
 On Windows 11, use 64-bit Python with PyQt5 and PyInstaller 6.9 or newer. Install Inno Setup 6.3 or newer and locate ISCC.exe.
 
 ```powershell
