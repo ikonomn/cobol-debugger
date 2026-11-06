@@ -241,8 +241,9 @@ def build_plan(path, executable=None):
     extension = ('.dll' if os.name == 'nt' else '.dylib' if sys.platform == 'darwin' else '.so') if module else ('.exe' if os.name == 'nt' else '')
     output = root/'bin'/(source.stem+extension)
     runtime_cwd, runtime_env = project_runtime(root, str(root/'bin'), env, data)
-    return ProjectPlan(root, source, sys.executable,
-                       [str(Path(__file__).with_name('project_build.py')), str(root), str(source)],
+    worker = ('--cobgdb-build' if getattr(sys, 'frozen', False)
+              else str(Path(__file__).with_name('project_build.py')))
+    return ProjectPlan(root, source, sys.executable, [worker, str(root), str(source)],
                        env, output, module, runtime_cwd, runtime_env,
                        [] if debug else [f for f in DEBUG_FLAGS if f not in flags],
                        compiler, flags, sql, debug, list(dict.fromkeys(scan_paths)))

@@ -1,6 +1,6 @@
 Name:           cobgdb-python
 Version:        0.1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Independent graphical debugger for GnuCOBOL
 License:        LicenseRef-Local-Test-Only
 Source0:        %{name}-%{version}.tar.gz
@@ -58,13 +58,16 @@ PYTHONPATH=%{buildroot}%{python3_sitelib} QT_QPA_PLATFORM=offscreen %{__python3}
 
 %files
 %license packaging/LICENSE.local-test
-%doc README.md DEVELOPMENT.md
+%doc README.md DEVELOPMENT.md RELEASE_NOTES.md examples/gui
 %{python3_sitelib}/cobgdb_python/
 %{_bindir}/cobgdb-python
 %{_bindir}/cobgdb-python-gui
 %{_datadir}/applications/cobgdb-python.desktop
 
 %changelog
+* Fri Nov 06 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-2
+- Use native program terminals and include a graphical COBOL debug example.
+
 * Wed Nov 04 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-1
 - Initial native RPM definitions with optional executable GUI launch.
 - Include interface icons, independent compiler and project bin defaults.

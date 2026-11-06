@@ -14,7 +14,7 @@ cobc -x -g -fsource-location -ftraceall -O0 -save-temps \
 ```
 
 On Windows, use `easter.exe` as the output name and the corresponding paths.
-The current debugger's managed program input is implemented on Linux only.
+Use the native program terminal for input. If Linux reports embedded fallback, use Send input.
 
 Start the GUI from the repository root:
 
@@ -25,9 +25,8 @@ python3 -m cobgdb_python.frontend
 1. Select `examples/easter/build/easter` with **Executable**.
 2. Its COBOL source opens automatically. Add breakpoints at lines **79** (ACCEPT)
    and **82** (the statement after input).
-3. Click **Run**. At line 79, enter `2031` and click **Send input**.
-4. Click **Continue** or **Next COBOL line**. At the next pause, inspect ETOS in
-   the popup: it should show `2031`.
+3. Click **Run**. At line 79, click **Continue**, then enter `2031` in the program terminal.
+4. At the next pause, inspect ETOS in the popup. It should show `2031`.
 5. Continue or step through calculations and watch the fields change.
 6. Remove unneeded breakpoints and Continue to exit. Read the output and find
    the report in `examples/easter/build/`, the executable's working directory.

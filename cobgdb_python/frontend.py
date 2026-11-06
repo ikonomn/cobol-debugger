@@ -239,6 +239,7 @@ class Window(QMainWindow):
         self.previous_values = {}
         self.execution_state = 'idle'
         self.session_loaded = False
+        self.terminal_mode = None
         self.workflow_started = False
         self.requests = {}
         self.buttons = {}
@@ -383,7 +384,8 @@ class Window(QMainWindow):
             self.append(self.messages, f'Could not create session log: {exc}\n')
         self.update_controls()
         self.fit_screen(initial=True)
-        self.process.start(sys.executable, ['-u', '-m', 'cobgdb_python.backend'])
+        arguments = ['--cobgdb-backend'] if getattr(sys, 'frozen', False) else ['-u', '-m', 'cobgdb_python.backend']
+        self.process.start(sys.executable, arguments)
 
     def fit_screen(self, screen=None, initial=False):
         screen = screen or (QGuiApplication.screenAt(QCursor.pos()) if initial else self.screen()) or QGuiApplication.primaryScreen()
@@ -436,7 +438,7 @@ class Window(QMainWindow):
             'pause': running and not any(op == 'pause' for op in self.requests.values()),
             'variables': paused and not pending,
             'stack': paused and not pending,
-            'input': (paused or running) and sys.platform != 'win32',
+            'input': (paused or running) and self.terminal_mode == 'embedded',
             'log': self.session_loaded,
         }
         for key, button in self.buttons.items():
@@ -500,7 +502,7 @@ class Window(QMainWindow):
     def launch_arguments(self, path, plan=None):
         if plan is None and project_root(path):
             plan = build_plan(path)
-        result = {'executable': str(path)}
+        result = {'executable': str(path), 'native_terminal': True}
         if plan:
             if plan.module:
                 raise ValueError('This is a callable module. Select the caller executable to debug it.')
@@ -755,6 +757,14 @@ class Window(QMainWindow):
             self.execution_state = 'ready'
             result = message.get('result', {})
             self.current_executable = result.get('executable')
+            self.terminal_mode = result.get('terminal_mode')
+            if self.terminal_mode == 'native':
+                self.program_output.setPlainText('Program input and output use the native terminal.')
+                self.append(self.messages, 'Use the native terminal for program input and output.\n')
+            else:
+                self.program_output.clear()
+            if result.get('terminal_notice'):
+                self.append(self.messages, result['terminal_notice'] + '\n')
             source = result.get('source')
             if source:
                 self.show_source(source)

@@ -17,3 +17,6 @@ logs/
 /examples/**/*.flowchart.pdf
 /examples/**/*.log
 /examples/easter/MV_FEASTS*.TXT
+
+# Hand-written native bridge for the graphical COBOL example.
+!/examples/gui/score_window.c

@@ -102,7 +102,7 @@ py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m cobgdb_python.frontend
 ```
 
-Windows runtime validation is pending; managed program input is not implemented.
+Windows GDB console validation is pending.
 See [platform support](#platform-support-and-limitations).
 
 ## Prepare a debug build
@@ -223,7 +223,7 @@ status bar shows whether execution is running, paused or exited.
 | **Pause** | Requests an interrupt while running. |
 | **Variables** | Opens the variables popup and refreshes when paused. |
 | **Stack** | Requests GDB stack frames, currently using generated/runtime function names. |
-| **Send input** | Sends the input-box text plus Enter to the program; Linux only. |
+| **Send input** | Sends the input-box text plus Enter when Linux uses embedded terminal fallback. |
 | **Open log file** | Opens the current session log in the desktop's associated application. |
 
 Controls follow execution state: source/build/run controls become available
@@ -234,7 +234,7 @@ exit. Conflicting actions are disabled while requests are pending.
 | Output tab | Contents |
 | --- | --- |
 | **Debugger** | Commands, results, messages and errors. |
-| **Program output** | DISPLAY output and echoed input. |
+| **Program output** | Identifies the native terminal or displays output and echoed input in embedded fallback. |
 | **JSON events** | Complete backend messages for troubleshooting. |
 | **Compiler** | Build diagnostics and success/failure messages. |
 
@@ -311,14 +311,9 @@ compiler-elided fields and comprehensive scope handling remain unfinished.
 
 ### ACCEPT and input
 
-Type a value and press Enter in the input box, or click **Send input**.
-The text is sent with a newline through the managed Linux terminal.
-Input sent while paused before ACCEPT is queued until execution resumes.
+Enter values and menu choices directly in the program terminal and read DISPLAY output there. On Linux the GUI opens a desktop terminal at executable load. When it falls back to embedded I/O, use the input box and **Send input**. On Windows the GUI requests a separate GDB inferior console.
 
-For an input walkthrough, see [Easter](examples/easter/README.md): stop at line
-79, enter `2031`, resume, then inspect ETOS at line 82. Its generated report is
-written in the program's working directory, normally its executable directory.
-An external backend `tty` bypasses the managed terminal and GUI input.
+For a breakpoint around input, see [Easter](examples/easter/README.md). Continue from the ACCEPT breakpoint before entering the value, then inspect ETOS at the next breakpoint. An explicitly supplied backend tty is also available.
 
 ## Compile programs
 
@@ -663,7 +658,7 @@ or full-project download. See its guide for environment variables and paths.
 | --- | --- | --- |
 | GUI, source view, breakpoints, variables, flowchart and logs | Locally tested | Runtime verification pending |
 | Compilation and GDB execution | Locally tested | Matching toolchain required; verification pending |
-| Managed input/output | PTY with ACCEPT/DISPLAY tested | Managed input unavailable; output unverified |
+| Program input/output | Native terminal ACCEPT tested; embedded PTY fallback available | Separate GDB console requested; native validation pending |
 | Project compiler / PDF export | Locally tested | Verification pending |
 | CI configuration | Test workflow configured | Test workflow configured |
 
@@ -804,3 +799,7 @@ Project executables run with the project's bin/ folder as the working directory 
 Fedora 44 and Mageia 10 specs are provided under packaging/fedora and packaging/mageia. Matched two-application transfer kits are created from the OpenCobolIDE repository's packaging/make-modern12-transfer-kits.py; the IDE's packaging/RPM_MODERN12.md describes native prerequisites, build commands and collection of binary/source RPMs and logs. Native target builds/install/desktop tests remain pending. These are private local-test specs, not approved distro-repository packages; the existing unspecified project-license notice is retained as LicenseRef-Local-Test-Only.
 
 The application version remains 0.1.0, with native RPM build revision 1. Windows release deliverables will be a standalone .exe and an Inno Setup .exe installer; Windows build/testing and publication remain separate pending steps.
+
+### Program terminal and graphical programs
+
+Run and enter values or menu choices in the native program terminal. On Linux the GUI opens a desktop terminal and reports when it falls back to its embedded input and output panes. On Windows the GUI requests a separate GDB inferior console. A graphical COBOL program also opens its own window. See [the graphical score example](examples/gui/README.md), [release notes](RELEASE_NOTES.md) and [Windows build instructions](packaging/windows/README.md).
