@@ -4,16 +4,31 @@ import re
 import json
 import sys
 from pathlib import Path
+from . import __version__
 from .session_log import SessionLog, default_log_directory
 from .ide_project import build_plan, project_root
 from .flowchart import FlowchartDialog
 from .icons import action_icon
 from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, pyqtSignal, QRect, QUrl, QSize, QTimer
-from PyQt5.QtGui import QTextCursor, QColor, QTextFormat, QSyntaxHighlighter, QTextCharFormat, QFont, QFontDatabase, QPainter, QDesktopServices, QGuiApplication, QCursor
+from PyQt5.QtGui import QTextCursor, QColor, QTextFormat, QSyntaxHighlighter, QTextCharFormat, QFont, QFontDatabase, QPainter, QDesktopServices, QGuiApplication, QCursor, QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                            QPushButton, QPlainTextEdit, QFileDialog, QInputDialog, QTabWidget, QLineEdit, QLabel, QSplitter, QTextEdit, QStyle, QStyleOptionButton, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QLayout, QSizePolicy)
+                            QPushButton, QPlainTextEdit, QFileDialog, QInputDialog, QTabWidget, QLineEdit, QLabel, QSplitter, QTextEdit, QStyle, QStyleOptionButton, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QLayout, QSizePolicy, QDialogButtonBox, QMessageBox, QTextBrowser)
 
 SHOW_BREAKPOINT_BUTTON = False
+RESOURCES = Path(__file__).with_name('resources')
+
+
+def examples_directory():
+    if getattr(sys, 'frozen', False):
+        candidates = [Path(sys.executable).resolve().parent / 'examples']
+    else:
+        candidates = [
+            Path(__file__).resolve().parents[1] / 'examples',
+            Path(sys.prefix) / 'share/doc/cobgdb-python/examples',
+            Path('/usr/share/doc/cobgdb-python/examples'),
+        ]
+    return next((folder for folder in candidates if folder.is_dir()), None)
+
 
 class CobolHighlighter(QSyntaxHighlighter):
     """Color fixed-format COBOL without changing source text or line numbers."""
@@ -232,6 +247,12 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('cobgdb-python — standalone debugger')
+        self.setWindowIcon(QIcon(str(RESOURCES / 'cobgdb.svg')))
+        help_menu = self.menuBar().addMenu('&Help')
+        help_action = help_menu.addAction('Help Contents')
+        help_action.setShortcut('F1')
+        help_action.triggered.connect(self.show_help)
+        help_menu.addAction('About COBGDB', self.show_about)
         self.resize(1000, 700)
         self.counter = 0
         self.buffer = b''
@@ -451,6 +472,43 @@ class Window(QMainWindow):
         self.input_text.setEnabled(allowed['input'])
         self.source.gutter.setEnabled(allowed['breakpoint'])
         self.toolbar.reflow()
+
+    def show_help(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('COBGDB Help')
+        dialog.resize(640, 520)
+        layout = QVBoxLayout(dialog)
+        browser = QTextBrowser(dialog)
+        browser.setMarkdown((RESOURCES / 'help.md').read_text(encoding='utf-8'))
+        layout.addWidget(browser)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.exec_()
+
+    def show_about(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('About COBGDB')
+        layout = QVBoxLayout(dialog)
+        heading = QLabel(dialog)
+        heading.setPixmap(self.windowIcon().pixmap(48, 48))
+        layout.addWidget(heading)
+        layout.addWidget(QLabel(f'COBGDB {__version__}'))
+        layout.addWidget(QLabel('Independent graphical debugger for GnuCOBOL using GDB.'))
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        examples = buttons.addButton('Examples', QDialogButtonBox.ActionRole)
+        examples.setIcon(action_icon('source'))
+        examples.clicked.connect(self.open_examples)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.exec_()
+
+    def open_examples(self):
+        folder = examples_directory()
+        if folder is None:
+            QMessageBox.information(self, 'Examples', 'No COBGDB examples directory was found.')
+        elif not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder))):
+            QMessageBox.warning(self, 'Examples', 'Could not open ' + str(folder))
 
     def open_log_file(self):
         if self.session_log:

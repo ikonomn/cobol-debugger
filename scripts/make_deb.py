@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
-    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-4'
+    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-6'
     output = (args.output or source/'dist').resolve()
     output.mkdir(parents=True, exist_ok=True)
     package = output/f'cobgdb-python_{version}_all.deb'
@@ -33,6 +33,10 @@ def main():
         for file in sorted((source/'cobgdb_python').glob('*.py')):
             shutil.copyfile(file, module/file.name)
             (module/file.name).chmod(0o644)
+        shutil.copytree(source/'cobgdb_python/resources', module/'resources')
+        icon_dir = root/'usr/share/icons/hicolor/scalable/apps'
+        icon_dir.mkdir(parents=True)
+        shutil.copyfile(module/'resources/cobgdb.svg', icon_dir/'cobgdb-python.svg')
         for command, target in [('cobgdb-python', 'backend'), ('cobgdb-python-gui', 'frontend')]:
             write(root, 'usr/bin/'+command,
                   f'#!/usr/bin/python3\nfrom cobgdb_python.{target} import main\nmain()\n', 0o755)
@@ -41,15 +45,16 @@ Type=Application
 Name=COBGDB Python Debugger
 Comment=Debug GnuCOBOL programs with source stepping and variable inspection
 Exec=cobgdb-python-gui
-Icon=applications-development
+Icon=cobgdb-python
 Terminal=false
 Categories=Development;Debugger;
 StartupNotify=true
 ''')
         docs = root/'usr/share/doc/cobgdb-python'
         docs.mkdir(parents=True)
-        for name in ('README.md', 'DEVELOPMENT.md'):
+        for name in ('README.md', 'DEVELOPMENT.md', 'RELEASE_NOTES.md'):
             shutil.copyfile(source/name, docs/name)
+        shutil.copytree(source/'examples/gui', docs/'examples/gui')
         write(root, 'usr/share/doc/cobgdb-python/README.Debian', '''COBGDB Python standalone debugger
 
 Launch from the applications menu or run cobgdb-python-gui.
@@ -57,8 +62,8 @@ Optionally: cobgdb-python-gui /path/to/executable [--source /path/to/source.cbl]
 The JSON backend command is cobgdb-python.
 Logs: ${XDG_STATE_HOME:-$HOME/.local/state}/cobgdb-python/logs/
 No OpenCobolIDE installation is required.
-Compile project sources in a writable project folder. The source repository's
-examples, datasets, session logs and build outputs are not included.
+Help > About COBGDB > Examples opens the installed graphical example.
+Copy the example into a writable project folder before compiling.
 GixSQL must be installed separately when compiling SQL programs.
 This is a local test package, not a published distribution.
 ''')
@@ -70,12 +75,13 @@ is granted or inferred by the packaging script.
 """)
         changelog = f"""cobgdb-python ({version}) unstable; urgency=medium
 
-  * Default all projects to bin as their runtime working directory.
+  * Add offline Help, About, installed example access and a launcher icon.
+  * Open a native terminal for program I/O and ship the graphical example.
   * Preserve explicit project cwd overrides and themed interface icons.
   * Preserve optional executable and --source launcher arguments.
   * Preserve no-argument startup and independent engine/compiler behavior.
 
- -- Local Package Builder <local-build@cobgdb-python.invalid>  Wed, 04 Nov 2026 12:00:00 +0000
+ -- Local Package Builder <local-build@cobgdb-python.invalid>  Fri, 06 Nov 2026 12:00:00 +0000
 """
         (docs/'changelog.Debian.gz').write_bytes(gzip.compress(changelog.encode(), mtime=0))
         for name, description, invocation in [

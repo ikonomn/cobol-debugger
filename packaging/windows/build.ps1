@@ -15,14 +15,20 @@ $Work = Join-Path ([IO.Path]::GetTempPath()) ("cobol-build-" + [guid]::NewGuid()
 New-Item -ItemType Directory $Work | Out-Null
 Push-Location $Repo
 try {
-    $Extra = @()
+    $Icon = Join-Path $PSScriptRoot "cobgdb.ico"
+    $Resources = Join-Path $Repo "cobgdb_python/resources"
+    $Extra = @("--icon", $Icon, "--add-data", "${Resources}:cobgdb_python/resources")
 
     & $Python -m PyInstaller --noconfirm --onefile --console --noupx --name cobgdb-python-gui `
         --paths $Repo --distpath $Output --workpath (Join-Path $Work "build") `
         --specpath $Work @Extra (Join-Path $PSScriptRoot "launcher.py")
     if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed. Build work is in $Work" }
     $Binary = Join-Path $Output "cobgdb-python-gui.exe"
-    & $InnoCompiler "/DAppBinary=$Binary" "/O$Output" (Join-Path $PSScriptRoot "installer.iss")
+    $Examples = (New-Item -ItemType Directory -Force (Join-Path $Output "examples/gui")).FullName
+    foreach ($File in @("README.md", "score.cob", "score_window.c")) {
+        Copy-Item (Join-Path $Repo "examples/gui/$File") $Examples -Force
+    }
+    & $InnoCompiler "/DAppBinary=$Binary" "/DExampleFiles=$Examples" "/O$Output" (Join-Path $PSScriptRoot "installer.iss")
     if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed. Build work is in $Work" }
     $Installer = Join-Path $Output "COBGDB-0.1.0-win11-x64-setup.exe"
     $Hashes = Get-FileHash -Algorithm SHA256 $Binary,$Installer
