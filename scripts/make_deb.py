@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
-    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-7'
+    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-8'
     output = (args.output or source/'dist').resolve()
     output.mkdir(parents=True, exist_ok=True)
     package = output/f'cobgdb-python_{version}_all.deb'
@@ -78,12 +78,12 @@ is granted or inferred by the packaging script.
         changelog = f"""cobgdb-python ({version}) unstable; urgency=medium
 
   * Add offline Help, About, installed example access and a launcher icon.
-  * Open a native terminal for program I/O and ship all five examples.
+  * Restore embedded program output and input and ship all five examples.
   * Preserve explicit project cwd overrides and themed interface icons.
   * Preserve optional executable and --source launcher arguments.
   * Preserve no-argument startup and independent engine/compiler behavior.
 
- -- Local Package Builder <local-build@cobgdb-python.invalid>  Fri, 06 Nov 2026 12:00:00 +0000
+ -- Local Package Builder <local-build@cobgdb-python.invalid>  Sat, 07 Nov 2026 12:00:00 +0000
 """
         (docs/'changelog.Debian.gz').write_bytes(gzip.compress(changelog.encode(), mtime=0))
         for name, description, invocation in [

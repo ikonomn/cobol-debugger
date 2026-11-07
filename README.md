@@ -223,7 +223,7 @@ status bar shows whether execution is running, paused or exited.
 | **Pause** | Requests an interrupt while running. |
 | **Variables** | Opens the variables popup and refreshes when paused. |
 | **Stack** | Requests GDB stack frames, currently using generated/runtime function names. |
-| **Send input** | Sends the input-box text plus Enter when Linux uses embedded terminal fallback. |
+| **Send input** | Sends the input-box text plus Enter through the embedded Linux program terminal. |
 | **Open log file** | Opens the current session log in the desktop's associated application. |
 
 Controls follow execution state: source/build/run controls become available
@@ -234,7 +234,7 @@ exit. Conflicting actions are disabled while requests are pending.
 | Output tab | Contents |
 | --- | --- |
 | **Debugger** | Commands, results, messages and errors. |
-| **Program output** | Identifies the native terminal or displays output and echoed input in embedded fallback. |
+| **Program output** | Displays program output and echoed input. |
 | **JSON events** | Complete backend messages for troubleshooting. |
 | **Compiler** | Build diagnostics and success/failure messages. |
 
@@ -311,7 +311,7 @@ compiler-elided fields and comprehensive scope handling remain unfinished.
 
 ### ACCEPT and input
 
-Enter values and menu choices directly in the program terminal and read DISPLAY output there. On Linux the GUI opens a desktop terminal at executable load. When it falls back to embedded I/O, use the input box and **Send input**. On Windows the GUI requests a separate GDB inferior console.
+Read DISPLAY output in **Program output**. On Linux, enter values or menu choices in the debugger input box and press Enter or click **Send input**. At an ACCEPT breakpoint, Continue before entering the value. Windows embedded keyboard input remains pending.
 
 For a breakpoint around input, see [Easter](examples/easter/README.md). Continue from the ACCEPT breakpoint before entering the value, then inspect ETOS at the next breakpoint. An explicitly supplied backend tty is also available.
 
@@ -658,7 +658,7 @@ or full-project download. See its guide for environment variables and paths.
 | --- | --- | --- |
 | GUI, source view, breakpoints, variables, flowchart and logs | Locally tested | Runtime verification pending |
 | Compilation and GDB execution | Locally tested | Matching toolchain required; verification pending |
-| Program input/output | Native terminal ACCEPT tested; embedded PTY fallback available | Separate GDB console requested; native validation pending |
+| Program input/output | Embedded PTY with ACCEPT/DISPLAY | Embedded input pending; output requires native validation |
 | Project compiler / PDF export | Locally tested | Verification pending |
 | CI configuration | Test workflow configured | Test workflow configured |
 
@@ -802,4 +802,4 @@ The application version remains 0.1.0, with native RPM build revision 1. Windows
 
 ### Program terminal and graphical programs
 
-Run and enter values or menu choices in the native program terminal. On Linux the GUI opens a desktop terminal and reports when it falls back to its embedded input and output panes. On Windows the GUI requests a separate GDB inferior console. A graphical COBOL program also opens its own window. See [the graphical score example](examples/gui/README.md), [release notes](RELEASE_NOTES.md) and [Windows build instructions](packaging/windows/README.md).
+Use **Program output** and the input box for terminal-style COBOL programs. Graphical COBOL programs open their own windows. See [the graphical score example](examples/gui/README.md), [release notes](RELEASE_NOTES.md) and [Windows build instructions](packaging/windows/README.md).

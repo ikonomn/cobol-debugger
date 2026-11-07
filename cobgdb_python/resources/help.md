@@ -9,7 +9,7 @@
 
 ## Enter program input
 
-Type values and menu choices in the native program terminal. Continue past an ACCEPT breakpoint before typing. If Linux reports that it is using the embedded terminal, use the debugger's input box and **Send input**. Graphical COBOL programs use their own windows.
+Read program output in **Program output**. On Linux, type values or menu choices in the input box and click **Send input**, or press Enter. Continue past an ACCEPT breakpoint so the program can read the value. Graphical programs use their own windows. Embedded keyboard input on Windows is pending.
 
 ## Projects and examples
 

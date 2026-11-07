@@ -18,4 +18,4 @@ Set-Location build
 cobc -free -x -g -fsource-location -ftraceall -O0 -save-temps -o gui-score.exe ../score.cob ../score_window.c -luser32
 ```
 
-Launch `cobgdb-python-gui` with the built executable and `--source` pointing to `score.cob`. Set a breakpoint on line 9, the `if selection` statement after the window returns. Click Run, choose **Add one** in the program window, inspect `selection` at the breakpoint, and step to observe `score` become 6. Continue and read `SCORE` in the program terminal. Repeat with **Subtract one** to exercise the other branch. Keep the generated C and headers in the build folder with the executable.
+Launch `cobgdb-python-gui` with the built executable and `--source` pointing to `score.cob`. Set a breakpoint on line 9, the `if selection` statement after the window returns. Click Run, choose **Add one** in the program window, inspect `selection` at the breakpoint, and step to observe `score` become 6. Continue and read `SCORE` in **Program output**. Repeat with **Subtract one** to exercise the other branch. Keep the generated C and headers in the build folder with the executable.

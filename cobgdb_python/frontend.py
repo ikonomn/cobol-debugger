@@ -560,7 +560,7 @@ class Window(QMainWindow):
     def launch_arguments(self, path, plan=None):
         if plan is None and project_root(path):
             plan = build_plan(path)
-        result = {'executable': str(path), 'native_terminal': True}
+        result = {'executable': str(path)}
         if plan:
             if plan.module:
                 raise ValueError('This is a callable module. Select the caller executable to debug it.')
@@ -816,13 +816,7 @@ class Window(QMainWindow):
             result = message.get('result', {})
             self.current_executable = result.get('executable')
             self.terminal_mode = result.get('terminal_mode')
-            if self.terminal_mode == 'native':
-                self.program_output.setPlainText('Program input and output use the native terminal.')
-                self.append(self.messages, 'Use the native terminal for program input and output.\n')
-            else:
-                self.program_output.clear()
-            if result.get('terminal_notice'):
-                self.append(self.messages, result['terminal_notice'] + '\n')
+            self.program_output.clear()
             source = result.get('source')
             if source:
                 self.show_source(source)

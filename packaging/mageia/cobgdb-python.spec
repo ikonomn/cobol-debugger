@@ -1,6 +1,6 @@
 Name:           cobgdb-python
 Version:        0.1.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Independent graphical debugger for GnuCOBOL
 License:        LicenseRef-Local-Test-Only
 Source0:        %{name}-%{version}.tar.gz
@@ -71,6 +71,9 @@ PYTHONPATH=%{buildroot}%{python3_sitelib} QT_QPA_PLATFORM=offscreen %{__python3}
 %{_datadir}/applications/cobgdb-python.desktop
 
 %changelog
+* Sat Nov 07 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-5
+- Restore the embedded program output and Linux input controls.
+
 * Fri Nov 06 2026 Local Package Builder <local-build@cobgdb-python.invalid> - 0.1.0-4
 - Include all five examples and their input data.
 

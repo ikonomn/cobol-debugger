@@ -36,7 +36,6 @@ class Debugger:
         self.source_map = SourceMap()
         self.last_frame = {}
         self.variable_cfiles = {}
-        self.native_terminal = None
         self.terminal = None
         self.output_stop = threading.Event()
 
@@ -308,15 +307,6 @@ class Debugger:
                 os.close(fd)
             self.terminal = None
 
-        if self.native_terminal:
-            lifetime, process = self.native_terminal
-            lifetime.cleanup()
-            try:
-                process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                process.terminate()
-            self.native_terminal = None
-
     def launch(self, args):
         if self.proc:
             raise ValueError('A session already exists; shutdown before launching another')
@@ -334,23 +324,13 @@ class Debugger:
         self.reader = threading.Thread(target=self.read, args=(self.proc,), daemon=True)
         self.reader.start()
         terminal_mode = 'embedded' if os.name == 'posix' else 'unavailable'
-        terminal_notice = ''
         tty = args.get('tty')
         try:
             self.command('-gdb-set pagination off')
             self.command('-gdb-set mi-async on')
             self.command('-file-exec-and-symbols ' + json.dumps(str(executable)))
             if os.name == 'nt':
-                use_console = bool(args.get('native_terminal'))
-                self.command('-gdb-set new-console ' + ('on' if use_console else 'off'))
-                if use_console:
-                    terminal_mode = 'native'
-            if sys.platform.startswith('linux') and args.get('native_terminal') and not tty:
-                from .native_terminal import open_terminal
-                try:
-                    tty, self.native_terminal = open_terminal(cwd)
-                except OSError as exc:
-                    terminal_notice = f'{exc}. Using the debugger input and output panes.'
+                self.command('-gdb-set new-console off')
             if os.name == 'posix' and not tty:
                 import pty
                 master, slave = pty.openpty()
@@ -368,7 +348,7 @@ class Debugger:
             self.close()
             raise
         result = {'executable': str(executable), 'platform': sys.platform,
-                  'terminal_mode': terminal_mode, 'terminal_notice': terminal_notice}
+                  'terminal_mode': terminal_mode}
         try:
             files = self.command('-file-list-exec-source-files').get('files', [])
             source, candidates = choose_source(files, executable, cwd)
