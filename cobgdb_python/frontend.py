@@ -9,7 +9,7 @@ from .session_log import SessionLog, default_log_directory
 from .ide_project import build_plan, project_root
 from .flowchart import FlowchartDialog
 from .icons import action_icon
-from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, pyqtSignal, QRect, QUrl, QSize, QTimer
+from PyQt5.QtCore import QProcess, Qt, pyqtSignal, QRect, QUrl, QSize, QTimer
 from PyQt5.QtGui import QTextCursor, QColor, QTextFormat, QSyntaxHighlighter, QTextCharFormat, QFont, QFontDatabase, QPainter, QDesktopServices, QGuiApplication, QCursor, QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                             QPushButton, QPlainTextEdit, QFileDialog, QInputDialog, QTabWidget, QLineEdit, QLabel, QSplitter, QTextEdit, QStyle, QStyleOptionButton, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QLayout, QSizePolicy, QDialogButtonBox, QMessageBox, QTextBrowser)
@@ -20,14 +20,17 @@ RESOURCES = Path(__file__).with_name('resources')
 
 def examples_directory():
     if getattr(sys, 'frozen', False):
-        candidates = [Path(sys.executable).resolve().parent / 'examples']
+        candidates = [Path(__file__).with_name('example_templates'),
+                      Path(sys.executable).resolve().parent / 'examples']
     else:
         candidates = [
+            Path(__file__).with_name('example_templates'),
             Path(__file__).resolve().parents[1] / 'examples',
-            Path(sys.prefix) / 'share/doc/cobgdb-python/examples',
-            Path('/usr/share/doc/cobgdb-python/examples'),
+            Path(sys.prefix) / 'share/doc/cobol-debugger/examples',
+            Path('/usr/share/doc/cobol-debugger/examples'),
         ]
-    return next((folder for folder in candidates if folder.is_dir()), None)
+    from .user_examples import ensure_user_examples
+    return ensure_user_examples(candidates, 'COBGDB-examples')
 
 
 class CobolHighlighter(QSyntaxHighlighter):
@@ -246,17 +249,19 @@ class WrappingToolbar(QWidget):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('cobgdb-python — standalone debugger')
+        self.setWindowTitle('COBOL Debugger')
         self.setWindowIcon(QIcon(str(RESOURCES / 'cobgdb.svg')))
         help_menu = self.menuBar().addMenu('&Help')
         help_action = help_menu.addAction('Help Contents')
         help_action.setShortcut('F1')
         help_action.triggered.connect(self.show_help)
-        help_menu.addAction('About COBGDB', self.show_about)
+        help_menu.addAction('Open examples folder', self.open_examples)
+        help_menu.addAction('About COBOL Debugger', self.show_about)
         self.resize(1000, 700)
         self.counter = 0
         self.buffer = b''
         self.variable_requests = set()
+        self.cobol_frame = False
         self.previous_values = {}
         self.execution_state = 'idle'
         self.session_loaded = False
@@ -264,23 +269,12 @@ class Window(QMainWindow):
         self.workflow_started = False
         self.requests = {}
         self.buttons = {}
-        self.build_active = False
         self.source_path = None
         self.breakpoints = {}
         self.pending_breakpoints = {}
         self.source_lines = []
         self.paused_line = None
-        self.compile_reset_id = None
-        self.compile_arguments = None
-        self.compile_plan = None
-        self.compile_program = 'cobc'
         self.current_executable = None
-        self.compiled_executable = None
-        self.compiler = QProcess(self)
-        self.compiler.setProcessChannelMode(QProcess.MergedChannels)
-        self.compiler.readyReadStandardOutput.connect(self.compiler_output)
-        self.compiler.finished.connect(self.compile_finished)
-        self.compiler.errorOccurred.connect(self.compiler_error)
         self.process = QProcess(self)
         self.process.readyReadStandardOutput.connect(self.receive)
         self.process.readyReadStandardError.connect(self.receive_errors)
@@ -289,7 +283,7 @@ class Window(QMainWindow):
         layout = QVBoxLayout()
         toolbar = WrappingToolbar()
         self.toolbar = toolbar
-        for key, title, callback in [('executable', 'Executable', self.launch), ('source', 'Source', self.open_source), ('flowchart', 'Flowchart', self.open_flowchart), ('compile', 'Compile with debug', self.compile_debug), ('breakpoint', 'Toggle breakpoint', self.breakpoint)]:
+        for key, title, callback in [('executable', 'Executable', self.launch), ('source', 'Source', self.open_source), ('flowchart', 'Flowchart', self.open_flowchart), ('breakpoint', 'Toggle breakpoint', self.breakpoint)]:
             button = QPushButton(title)
             button.setIcon(action_icon(key))
             self.buttons[key] = button
@@ -321,10 +315,6 @@ class Window(QMainWindow):
             pane.setReadOnly(True)
             pane.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
             tabs.addTab(pane, action_icon(key), title)
-        self.build_output = QPlainTextEdit()
-        self.build_output.setReadOnly(True)
-        self.build_output.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        tabs.addTab(self.build_output, action_icon('compile'), 'Compiler')
         self.program_output.setStyleSheet('QPlainTextEdit { background: #12212b; color: #b8efc5; }')
         self.messages.setStyleSheet('QPlainTextEdit { background: #f3f6fb; color: #234361; }')
         self.log.setStyleSheet('QPlainTextEdit { background: #18212e; color: #bdcce5; }')
@@ -369,6 +359,15 @@ class Window(QMainWindow):
         self.variables_dialog.resize(700, 500)
         popup_layout = QVBoxLayout(self.variables_dialog)
         popup_layout.addWidget(variables_panel)
+        self.stack_dialog = QDialog(self)
+        self.stack_dialog.setWindowTitle('Call stack')
+        self.stack_dialog.resize(760, 300)
+        self.stack_table = QTableWidget(0, 4)
+        self.stack_table.setHorizontalHeaderLabels(['Frame', 'Function', 'Source', 'Line'])
+        self.stack_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.stack_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        stack_layout = QVBoxLayout(self.stack_dialog)
+        stack_layout.addWidget(self.stack_table)
         splitter.addWidget(source_panel)
         splitter.addWidget(tabs)
         layout.addWidget(splitter)
@@ -438,18 +437,16 @@ class Window(QMainWindow):
         QTimer.singleShot(0, self.fit_screen)
 
     def update_controls(self):
-        busy = self.build_active or self.compile_reset_id is not None
-        loaded = self.session_loaded and not busy
+        loaded = self.session_loaded
         paused = loaded and self.execution_state == 'paused'
         running = loaded and self.execution_state == 'running'
-        source = self.workflow_started and bool(self.source_path) and not busy
+        source = self.workflow_started and bool(self.source_path)
         pending = any(op in ('run', 'continue', 'next', 'finish', 'pause', 'launch', 'reset')
                       for op in self.requests.values())
         allowed = {
-            'executable': not self.session_loaded and not busy and not pending,
-            'source': self.workflow_started and not busy and not running and not pending,
+            'executable': not self.session_loaded and not pending,
+            'source': self.workflow_started and not running and not pending,
             'flowchart': source,
-            'compile': source and not running and not pending,
             'breakpoint': source and loaded and not running and not pending,
             'run': source and loaded and self.execution_state in ('ready', 'exited') and not pending,
             'continue': paused and not pending,
@@ -457,25 +454,20 @@ class Window(QMainWindow):
             'step': paused and not pending,
             'finish': paused and not pending,
             'pause': running and not any(op == 'pause' for op in self.requests.values()),
-            'variables': paused and not pending,
+            'variables': paused and self.cobol_frame and not pending,
             'stack': paused and not pending,
             'input': (paused or running) and self.terminal_mode == 'embedded',
             'log': self.session_loaded,
         }
         for key, button in self.buttons.items():
             button.setEnabled(allowed.get(key, False))
-        self.buttons['compile'].setText('Compile with debug')
-        self.buttons['compile'].setToolTip(
-            'Build independently using config/project.json and its Debug compilation setting.'
-            if self.source_path and project_root(self.source_path) else
-            'Compile a standalone source with debugging options.')
         self.input_text.setEnabled(allowed['input'])
         self.source.gutter.setEnabled(allowed['breakpoint'])
         self.toolbar.reflow()
 
     def show_help(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle('COBGDB Help')
+        dialog.setWindowTitle('COBOL Debugger Help')
         dialog.resize(640, 520)
         layout = QVBoxLayout(dialog)
         browser = QTextBrowser(dialog)
@@ -488,13 +480,13 @@ class Window(QMainWindow):
 
     def show_about(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle('About COBGDB')
+        dialog.setWindowTitle('About COBOL Debugger')
         layout = QVBoxLayout(dialog)
         heading = QLabel(dialog)
         heading.setPixmap(self.windowIcon().pixmap(48, 48))
         layout.addWidget(heading)
-        layout.addWidget(QLabel(f'COBGDB {__version__}'))
-        layout.addWidget(QLabel('Independent graphical debugger for GnuCOBOL using GDB.'))
+        layout.addWidget(QLabel(f'COBOL Debugger {__version__}'))
+        layout.addWidget(QLabel('A graphical debugger for GnuCOBOL, built with Python and powered by GDB.'))
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
         examples = buttons.addButton('Examples', QDialogButtonBox.ActionRole)
         examples.setIcon(action_icon('source'))
@@ -506,7 +498,7 @@ class Window(QMainWindow):
     def open_examples(self):
         folder = examples_directory()
         if folder is None:
-            QMessageBox.information(self, 'Examples', 'No COBGDB examples directory was found.')
+            QMessageBox.information(self, 'Examples', 'No COBOL Debugger examples directory was found.')
         elif not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder))):
             QMessageBox.warning(self, 'Examples', 'Could not open ' + str(folder))
 
@@ -589,14 +581,14 @@ class Window(QMainWindow):
                 self.source.centerCursor()
 
     def request_variables(self):
-        self.variables_dialog.show()
-        if self.execution_state != 'paused':
-            self.variables_label.setText('Values refresh at the next pause; program is ' + self.execution_state)
+        if self.execution_state != 'paused' or not self.cobol_frame:
             return
+        self.variables_dialog.show()
         if not self.variable_requests:
             self.variable_requests.add(self.send('cobol_variables'))
 
     def display_variables(self, rows):
+        rows = [row for row in rows if row.get('value') != '<unavailable>']
         self.variables_table.setRowCount(len(rows))
         current = {}
         for index, row in enumerate(rows):
@@ -613,88 +605,38 @@ class Window(QMainWindow):
         self.previous_values = current
         self.variables_label.setText(f'COBOL variables ({len(rows)}) — changed values highlighted')
 
-    def compile_debug(self):
-        if self.compiler.state() != QProcess.NotRunning or self.compile_reset_id is not None:
-            return
-        if not self.source_path:
-            self.open_source()
-        if not self.source_path:
-            return
-        source = Path(self.source_path).resolve()
-        self.compile_plan = None
+    def display_stack(self, rows):
+        self.stack_table.setRowCount(len(rows))
+        for index, row in enumerate(rows):
+            frame = row.get('frame', row)
+            values = (frame.get('level', ''), frame.get('func', ''),
+                      frame.get('fullname') or frame.get('file', ''), frame.get('line', ''))
+            for column, value in enumerate(values):
+                self.stack_table.setItem(index, column, QTableWidgetItem(str(value)))
+        self.stack_dialog.show()
+        self.stack_dialog.raise_()
+
+    @staticmethod
+    def native_source_location(message):
+        frame = message.get('frame') or {}
+        raw = message.get('generated_location') or {}
+        filename = frame.get('fullname') or raw.get('file') or frame.get('file')
         try:
-            self.compile_plan = build_plan(source, self.current_executable)
-            if self.compile_plan:
-                plan = self.compile_plan
-                source = plan.source
-                self.compiled_executable = plan.output
-                self.compile_program = plan.program
-                arguments = plan.arguments
-                build = plan.root
-                environment = QProcessEnvironment()
-                for key, value in plan.environment.items():
-                    environment.insert(key, value)
-                self.compiler.setProcessEnvironment(environment)
-            else:
-                if source.suffix.lower() in ('.cbsql', '.cpy'):
-                    raise ValueError('Select the original COBOL source or an OpenCobolIDE project; this file needs its project build pipeline.')
-                build = source.parent / 'build'
-                build.mkdir(exist_ok=True)
-                self.compiled_executable = build / (source.stem + ('.exe' if sys.platform == 'win32' else ''))
-                self.compile_program = 'cobc'
-                arguments = ['-g', '-fsource-location', '-ftraceall', '-O0', '-save-temps',
-                             '-x', '-o', str(self.compiled_executable), str(source)]
-                self.compiler.setProcessEnvironment(QProcessEnvironment.systemEnvironment())
-        except (OSError, ValueError, RuntimeError) as exc:
-            self.append(self.messages, 'Build configuration error: ' + str(exc) + '\n')
-            self.tabs.setCurrentWidget(self.messages)
-            return
-        self.build_active = True
-        self.build_output.clear()
-        self.tabs.setCurrentWidget(self.build_output)
-        self.append(self.build_output, 'Compiling: ' + str(source) + '\n')
-        if self.compile_plan:
-            self.append(self.build_output, 'Using internal project compiler and config/project.json. Project root: ' + str(build) + '\n')
-            if self.compile_plan.missing_debug_flags:
-                self.append(self.build_output, 'Warning: project settings omit debug options: ' + ' '.join(self.compile_plan.missing_debug_flags) + '. Settings are preserved; enable debug compilation in the project configuration if required.\n')
-        self.compiler.setWorkingDirectory(str(build))
-        self.statusBar().showMessage('Compiling…')
-        self.compile_arguments = arguments
-        self.compile_reset_id = self.send('reset')
-        self.breakpoints.clear()
-        self.pending_breakpoints.clear()
-        self.paused_line = None
-        self.render_source()
-
-    def compiler_output(self):
-        text = bytes(self.compiler.readAllStandardOutput()).decode('utf-8', errors='replace')
-        if text:
-            self.record_log('compiler_output', text)
-            self.append(self.build_output, text)
-
-    def compiler_error(self, error):
-        self.build_active = False
-        self.update_controls()
-        self.append(self.build_output, self.compiler.errorString() + '\n')
-        self.statusBar().showMessage('Compiler error — see Compiler tab')
-
-    def compile_finished(self, code, status):
-        self.build_active = False
-        self.update_controls()
-        self.record_log('compiler_finished', {'code': code, 'status': int(status)})
-        self.compiler_output()
-        if code == 0 and status == QProcess.NormalExit:
-            self.append(self.build_output, f'Build succeeded: {self.compiled_executable}\n')
-            if self.compile_plan and self.compile_plan.module:
-                self.append(self.build_output, 'Callable module built. Select its caller executable to debug; a module is not launched directly.\n')
-                self.statusBar().showMessage('Project module build complete')
-            else:
-                self.append(self.build_output, 'Debug session loading. Add breakpoints, then click Run.\n')
-                self.statusBar().showMessage('Build succeeded — loading debug session')
-                self.send('launch', self.launch_arguments(self.compiled_executable, self.compile_plan))
-        else:
-            self.append(self.build_output, f'Build failed (exit {code}).\n')
-            self.statusBar().showMessage('Build failed — see Compiler tab')
+            line = int(frame.get('line') or raw.get('line') or 0)
+        except (TypeError, ValueError):
+            return None
+        if not filename or line < 1:
+            return None
+        path = Path(filename)
+        if not path.is_absolute() or path.suffix.lower() != '.c':
+            return None
+        try:
+            with path.open('rb') as source:
+                if re.search(rb'/\* Generated by\s+cobc\b', source.read(4096)):
+                    return None
+        except OSError:
+            return None
+        return str(path), line
 
     @staticmethod
     def source_key(path):
@@ -834,14 +776,8 @@ class Window(QMainWindow):
             self.session_loaded = False
             self.execution_state = 'idle'
 
-        if self.compile_reset_id is not None and message.get('id') == self.compile_reset_id:
-            self.compile_reset_id = None
-            if message.get('ok'):
-                self.record_log('compiler_started', {'program': self.compile_program, 'arguments': self.compile_arguments, 'cwd': self.compiler.workingDirectory()})
-                self.compiler.start(self.compile_program, self.compile_arguments)
-            else:
-                self.build_active = False
-                self.append(self.build_output, 'Could not stop debugger; build canceled.\n')
+        if operation == 'stack' and message.get('ok') and self.execution_state == 'paused':
+            self.display_stack(message.get('result', {}).get('stack', []))
         if message.get('id') in self.variable_requests:
             self.variable_requests.discard(message['id'])
             if message.get('ok'):
@@ -861,19 +797,32 @@ class Window(QMainWindow):
             self.render_source()
         if message.get('event') == 'stopped':
             self.execution_state = 'paused'
-            self.variables_table.setEnabled(True)
-            self.variables_label.setText('Refreshing values at current pause…')
-            self.request_variables()
-            location = message.get('location')
-            if location:
+            location = message.get('location') or {}
+            self.cobol_frame = bool(location.get('file') and location.get('line')
+                                    and message.get('source_mapping') != 'unavailable')
+            self.variables_table.setEnabled(self.cobol_frame)
+            if self.cobol_frame:
+                self.variables_label.setText('Refreshing values at current pause…')
+                self.request_variables()
                 self.show_source(location['file'], location['line'])
                 if self.flowchart.isVisible():
                     self.flowchart.load_source(self.source_path, '\n'.join(self.source_lines))
                     self.flowchart.highlight(location['line'])
                 self.statusBar().showMessage(f"Paused: {location['file']} — COBOL line {location['line']}")
             else:
+                self.variable_requests.clear()
+                self.display_variables([])
+                self.variables_label.setText('COBOL variables unavailable in this frame')
+                self.paused_line = None
                 self.source.setExtraSelections([])
-                self.statusBar().showMessage('Paused outside mapped COBOL source')
+                self.flowchart.highlight(None, observe=False)
+                native = self.native_source_location(message)
+                if native:
+                    path, line = native
+                    self.show_source(path, line)
+                    self.statusBar().showMessage(f'Paused: {path} — C line {line}')
+                else:
+                    self.statusBar().showMessage('Paused outside mapped COBOL source')
         elif message.get('event') == 'running':
             self.execution_state = 'running'
             self.variable_requests.clear()
@@ -913,9 +862,6 @@ class Window(QMainWindow):
     def closeEvent(self, event):
         self.variables_dialog.close()
         self.flowchart.close()
-        if self.compiler.state() != QProcess.NotRunning:
-            self.compiler.kill()
-            self.compiler.waitForFinished(1000)
         self.send('shutdown')
         if not self.process.waitForFinished(3000):
             self.process.kill()
@@ -947,6 +893,8 @@ def parse_launch_arguments(argv=None):
 def main(argv=None):
     args = parse_launch_arguments(argv)
     app = QApplication([sys.argv[0]])
+    app.setApplicationName('COBOL Debugger')
+    examples_directory()
     window = Window()
     window.show()
     if args.executable:
@@ -956,6 +904,13 @@ def main(argv=None):
             QTimer.singleShot(0, load)
         else:
             window.process.started.connect(load)
+    else:
+        QTimer.singleShot(0, lambda: QMessageBox.information(
+            window, 'Prepare a debug executable',
+            'Compile your COBOL source in OpenCobolIDE or your build tool with:\n\n'
+            '-g -fsource-location -ftraceall -O0 -save-temps\n\n'
+            'Keep the generated C and header files from the same build. '
+            'Then click Executable to open the compiled program.'))
     sys.exit(app.exec_())
 
 

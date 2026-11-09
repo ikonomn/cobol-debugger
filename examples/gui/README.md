@@ -1,21 +1,21 @@
-# Debug a graphical COBOL program
+# Graphical score
 
-This example keeps its score and decision in COBOL. A small C bridge displays an X11 window on Linux or a Win32 dialog on Windows.
+COBOL manages the score. A C helper displays the choices in an X11 window.
+Install a C compiler and the X11 development headers and libraries.
 
-Build from this directory using GnuCOBOL and the matching C compiler. Linux requires X11 headers and libraries.
+Open a terminal in this example folder and build:
 
 ```bash
-mkdir -p build
-cd build
-cobc -free -x -g -fsource-location -ftraceall -O0 -save-temps -o gui-score ../score.cob ../score_window.c -lX11
+mkdir -p bin
+cd bin
+cobc -free -x -g -fsource-location -ftraceall -O0 -save-temps \
+  -o score ../score.cob ../score_window.c -lX11
+cobol-debugger ./score --source ../score.cob
 ```
 
-On Windows with a MinGW GnuCOBOL toolchain, run from a PowerShell prompt.
+Set a breakpoint on `if selection`, then click **Run** and choose **Add one** in
+the program window. Inspect `selection` and step until `score` becomes 6.
+Continue to see the result in **Program output**.
 
-```powershell
-New-Item -ItemType Directory -Force build
-Set-Location build
-cobc -free -x -g -fsource-location -ftraceall -O0 -save-temps -o gui-score.exe ../score.cob ../score_window.c -luser32
-```
-
-Launch `cobgdb-python-gui` with the built executable and `--source` pointing to `score.cob`. Set a breakpoint on line 9, the `if selection` statement after the window returns. Click Run, choose **Add one** in the program window, inspect `selection` at the breakpoint, and step to observe `score` become 6. Continue and read `SCORE` in **Program output**. Repeat with **Subtract one** to exercise the other branch. Keep the generated C and headers in the build folder with the executable.
+You can also open this folder in OpenCobolIDE and build it with debug enabled.
+The IDE detects the C helper and its X11 library.

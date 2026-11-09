@@ -92,12 +92,12 @@ class ProjectBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='sql project ') as folder:
             root = Path(folder)
             source, data = create_project(root)
-            example = Path(__file__).resolve().parents[1]/'examples/worldcities'
+            example = Path(__file__).resolve().parents[1]/'examples/eu-cities'
             for directory in ('src', 'copybooks'):
                 shutil.copytree(example/directory, root/directory, dirs_exist_ok=True)
             source.unlink()
             before = (root/'config/project.json').read_bytes()
-            for name in ('sql-error-handler', 'select-greek-cities'):
+            for name in ('sql-error-handler', 'select-eu-cities'):
                 plan = build_plan(root/'src'/(name+'.cbl'))
                 built = compile_plan(plan)
                 self.assertEqual(built.returncode, 0, built.stdout+built.stderr)
@@ -105,5 +105,5 @@ class ProjectBuildTests(unittest.TestCase):
                 retained = list((root/'debug_data/src'/name).iterdir())
                 self.assertTrue(any(p.suffix == '.c' for p in retained))
                 self.assertTrue(all(p.suffix in ('.c', '.h') for p in retained))
-            self.assertTrue((root/'build/select-greek-cities.cbsql').is_file())
+            self.assertTrue((root/'build/select-eu-cities.cbsql').is_file())
             self.assertEqual((root/'config/project.json').read_bytes(), before)

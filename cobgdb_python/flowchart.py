@@ -163,7 +163,7 @@ class FlowchartDialog(QDialog):
             writer.setPageOrientation(QPageLayout.Portrait)
             writer.setPageMargins(QMarginsF(12,12,12,12))
             writer.setTitle('COBOL flowchart - ' + Path(self.source_path).name)
-            writer.setCreator('cobgdb-python')
+            writer.setCreator('COBOL Debugger')
             width, height = writer.width(), writer.height()
             header, footer = 76, 32
             bounds = self.scene.itemsBoundingRect().adjusted(-30,-30,30,30)

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "name": "eu-cities",
+  "defaults": {
+    "enabled": true,
+    "flags": [
+      "-Wall",
+      "-debug",
+      "-g",
+      "-fsource-location",
+      "-ftraceall",
+      "-O0",
+      "-save-temps"
+    ],
+    "environment": {
+      "compiler_path": "",
+      "path_mode": "inherit",
+      "path": "",
+      "cob_copy_dir": "",
+      "gixpp_path": "",
+      "gixsql_copy_dir": "",
+      "gixsql_library_dir": ""
+    },
+    "copybook_paths": [
+      "copybooks"
+    ],
+    "listing": {
+      "enabled": true,
+      "filename": "build/{stem}.lst"
+    },
+    "source_format": "inherit",
+    "library_paths": null,
+    "libraries": null
+  },
+  "sources": {
+    "src/sql-error-handler.cbl": {
+      "source_format": "inherit",
+      "listing": {},
+      "copybook_paths": null,
+      "library_paths": null,
+      "libraries": null,
+      "flags": null,
+      "environment": {
+        "compiler_path": "",
+        "path_mode": "inherit",
+        "path": "",
+        "cob_copy_dir": "",
+        "gixpp_path": "",
+        "gixsql_copy_dir": "",
+        "gixsql_library_dir": ""
+      },
+      "output_name": "SQL-ERROR-HANDLER"
+    }
+  },
+  "runtime": {
+    "accepted": true,
+    "working_directory": "bin",
+    "data_directories": []
+  },
+  "debug": {
+    "enabled": true
+  },
+  "output_directories": {
+    "executables": "bin",
+    "libraries": "bin"
+  }
+}

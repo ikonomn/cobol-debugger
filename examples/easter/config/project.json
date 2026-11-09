@@ -19,5 +19,9 @@
   },
   "debug": {
     "enabled": true
+  },
+  "output_directories": {
+    "executables": "bin",
+    "libraries": "bin"
   }
 }

@@ -15,9 +15,15 @@ class FrontendCliTests(unittest.TestCase):
     def test_no_argument_keeps_manual_selection(self):
         app, window = Mock(), Mock()
         app.exec_.return_value = 0
-        with patch.object(frontend, 'QApplication', return_value=app), patch.object(frontend, 'Window', return_value=window):
+        with patch.object(frontend, 'QApplication', return_value=app), \
+                patch.object(frontend, 'Window', return_value=window), \
+                patch.object(frontend.QTimer, 'singleShot', side_effect=lambda delay, fn: fn()), \
+                patch.object(frontend.QMessageBox, 'information') as notice:
             with self.assertRaises(SystemExit) as status:
                 frontend.main([])
+        notice.assert_called_once()
+        self.assertIs(notice.call_args.args[0], window)
+        self.assertIn('-g -fsource-location -ftraceall -O0 -save-temps', notice.call_args.args[2])
         self.assertEqual(status.exception.code, 0)
         window.show.assert_called_once()
         window.load_executable.assert_not_called()

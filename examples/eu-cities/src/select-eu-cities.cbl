@@ -3,7 +3,7 @@
       * Runtime settings are read from DB_CONFIG_FILE.
       ******************************************************************
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. SELECT-GREEK-CITIES.
+       PROGRAM-ID. SELECT-EU-CITIES.
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -38,7 +38,7 @@
            DECLARE GRC CURSOR FOR
             SELECT *
             FROM cities_new INDEXED BY cities_new_iso2_city_idx
-            WHERE iso2 = 'GR';
+            ORDER BY iso2, city;
        END-EXEC.
 
        PROCEDURE DIVISION.
@@ -73,11 +73,11 @@
                STOP RUN
            END-IF
 
-           PERFORM FETCH-GREEK-CITY
+           PERFORM FETCH-EU-CITY
            PERFORM UNTIL SQLCODE = 100 OR SQLCODE < ZERO
                ADD 1 TO ROW-COUNT
                PERFORM DISPLAY-CITY
-               PERFORM FETCH-GREEK-CITY
+               PERFORM FETCH-EU-CITY
            END-PERFORM
 
            IF SQLCODE < ZERO
@@ -85,10 +85,10 @@
            END-IF
            EXEC SQL CLOSE GRC END-EXEC
            EXEC SQL CONNECT RESET END-EXEC
-           DISPLAY "GREEK CITIES: " ROW-COUNT
+           DISPLAY "EU CITIES: " ROW-COUNT
            STOP RUN.
 
-       FETCH-GREEK-CITY.
+       FETCH-EU-CITY.
            INITIALIZE CITY-ROW
            MOVE "FETCH CURSOR" TO CURRENT-STEP
            EXEC SQL
@@ -101,6 +101,7 @@
 
        DISPLAY-CITY.
            DISPLAY FUNCTION TRIM(CITY-NAME)
+               " | " FUNCTION TRIM(COUNTRY-NAME)
                " | " FUNCTION TRIM(ADMIN-NAME)
                " | " FUNCTION TRIM(CAPITAL)
                " | population=" FUNCTION TRIM(POPULATION)
