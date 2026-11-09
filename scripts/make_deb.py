@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
-    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-14'
+    version = re.search(r'^version\s*=\s*"([^"]+)"', (source/'pyproject.toml').read_text(), re.M)[1]+'-15'
     output = (args.output or source/'dist').resolve()
     output.mkdir(parents=True, exist_ok=True)
     package = output/f'cobol-debugger_{version}_all.deb'
@@ -75,7 +75,7 @@ This is a local test package, not a published distribution.
               + '\n' + (source/'LICENSE').read_text(encoding='utf-8'))
         changelog = f"""cobol-debugger ({version}) unstable; urgency=medium
 
-  * Show call stack frames, scope COBOL variables to COBOL stops, and open original C helpers.
+  * Show call stack frames, scope COBOL variables to COBOL stops, and open original C helpers in a separate window.
   * Add offline Help, About, installed example access and a launcher icon.
   * Restore embedded program output and input and ship all five examples.
   * Preserve explicit project cwd overrides and themed interface icons.

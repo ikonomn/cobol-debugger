@@ -78,11 +78,16 @@ def test_finish_clears_variables_and_discards_late_response(window, tmp_path):
 
 def test_step_into_opens_original_c_helper_at_line_23(window):
     source = Path(__file__).resolve().parents[1] / 'examples/gui/score_window.c'
+    cobol = source.with_name('score.cob')
+    window.show_source(str(cobol), 9)
     receive(window, event='stopped', reason='end-stepping-range', location=None,
             source_mapping='unavailable',
             frame={'fullname': str(source), 'file': source.name, 'line': '23',
                    'func': 'choose_score'})
-    assert window.source_path == str(source)
-    assert window.source.textCursor().blockNumber() == 22
-    assert window.source.extraSelections()[0].cursor.blockNumber() == 22
+    assert window.source_path == str(cobol)
+    assert not window.source.extraSelections()
+    assert window.c_source_dialog.isVisible()
+    assert window.c_source_dialog.windowTitle() == f'{source} — C line 23'
+    assert window.c_source.textCursor().blockNumber() == 22
+    assert window.c_source.extraSelections()[0].cursor.blockNumber() == 22
     assert window.counter == 0

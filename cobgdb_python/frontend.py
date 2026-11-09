@@ -368,6 +368,14 @@ class Window(QMainWindow):
         self.stack_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         stack_layout = QVBoxLayout(self.stack_dialog)
         stack_layout.addWidget(self.stack_table)
+        self.c_source_dialog = QDialog(self)
+        self.c_source_dialog.resize(850, 550)
+        self.c_source = QPlainTextEdit()
+        self.c_source.setReadOnly(True)
+        self.c_source.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.c_source.setFont(fixed_font)
+        c_source_layout = QVBoxLayout(self.c_source_dialog)
+        c_source_layout.addWidget(self.c_source)
         splitter.addWidget(source_panel)
         splitter.addWidget(tabs)
         layout.addWidget(splitter)
@@ -616,6 +624,28 @@ class Window(QMainWindow):
         self.stack_dialog.show()
         self.stack_dialog.raise_()
 
+    def show_c_source(self, path, line):
+        try:
+            text = Path(path).read_text(encoding='utf-8-sig', errors='replace')
+        except OSError as exc:
+            self.append(self.messages, f'Could not open C source: {exc}\n')
+            return
+        self.c_source_dialog.setWindowTitle(f'{path} — C line {line}')
+        self.c_source.setPlainText('\n'.join(
+            f'{number:5}  {content}' for number, content in enumerate(text.splitlines(), 1)))
+        self.c_source.setExtraSelections([])
+        block = self.c_source.document().findBlockByNumber(line - 1)
+        if block.isValid():
+            selection = QTextEdit.ExtraSelection()
+            selection.cursor = QTextCursor(block)
+            selection.format.setBackground(QColor('#ffeb99'))
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            self.c_source.setExtraSelections([selection])
+            self.c_source.setTextCursor(QTextCursor(block))
+        self.c_source_dialog.show()
+        self.c_source_dialog.raise_()
+        self.c_source.centerCursor()
+
     @staticmethod
     def native_source_location(message):
         frame = message.get('frame') or {}
@@ -802,6 +832,7 @@ class Window(QMainWindow):
                                     and message.get('source_mapping') != 'unavailable')
             self.variables_table.setEnabled(self.cobol_frame)
             if self.cobol_frame:
+                self.c_source_dialog.hide()
                 self.variables_label.setText('Refreshing values at current pause…')
                 self.request_variables()
                 self.show_source(location['file'], location['line'])
@@ -819,12 +850,14 @@ class Window(QMainWindow):
                 native = self.native_source_location(message)
                 if native:
                     path, line = native
-                    self.show_source(path, line)
+                    self.show_c_source(path, line)
                     self.statusBar().showMessage(f'Paused: {path} — C line {line}')
                 else:
+                    self.c_source_dialog.hide()
                     self.statusBar().showMessage('Paused outside mapped COBOL source')
         elif message.get('event') == 'running':
             self.execution_state = 'running'
+            self.c_source.setExtraSelections([])
             self.variable_requests.clear()
             self.variables_table.setEnabled(False)
             self.paused_line = None
@@ -834,6 +867,7 @@ class Window(QMainWindow):
             self.statusBar().showMessage('Running')
         elif message.get('event') == 'exited':
             self.execution_state = 'exited'
+            self.c_source.setExtraSelections([])
             self.variable_requests.clear()
             self.variables_table.setEnabled(False)
             self.paused_line = None
