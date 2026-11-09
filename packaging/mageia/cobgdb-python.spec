@@ -1,6 +1,6 @@
 Name:           cobol-debugger
 Version:        0.1.0
-Release:        11%{?dist}
+Release:        12%{?dist}
 Summary:        Independent graphical debugger for GnuCOBOL
 License:        0BSD AND CC-BY-4.0 AND LicenseRef-Local-Test-Only
 Source0:        cobgdb-python-%{version}.tar.gz
