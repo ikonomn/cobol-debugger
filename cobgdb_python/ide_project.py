@@ -4,6 +4,7 @@ No IDE modules, preferences, Qt or IDE build scripts are used.
 """
 from dataclasses import dataclass
 from pathlib import Path
+from itertools import chain
 import json
 import os
 import sys
@@ -41,10 +42,11 @@ def original_source(root, path, executable=None):
     if path.suffix.lower() in ('.cbl', '.cob', '.pco') and path.is_file():
         return path
     stem = Path(executable).stem if path.suffix.lower() == '.cpy' and executable else path.stem
-    candidates = [p for p in (root/'src').rglob('*') if p.is_file()
+    # Flat example projects keep their COBOL entry point beside config/.
+    candidates = [p for p in chain(root.iterdir(), (root/'src').rglob('*')) if p.is_file()
                   and p.suffix.lower() in ('.cbl', '.cob', '.pco') and p.stem.casefold() == stem.casefold()]
     if len(candidates) != 1:
-        raise ValueError('Cannot identify a unique original project source. Select its file from the project src directory.')
+        raise ValueError('Cannot identify a unique original project source. Select its original COBOL source.')
     return candidates[0].resolve()
 
 

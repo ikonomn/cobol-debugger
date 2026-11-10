@@ -3,18 +3,19 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cobgdb-python"
+name = "cobol-debugger"
 version = "0.1.0"
 description = "Independent JSON debugger backend for GnuCOBOL and GDB"
 requires-python = ">=3.10"
+license = {file = "LICENSE"}
 dependencies = []
 
 [project.optional-dependencies]
 gui = ["PyQt5>=5.15,<6"]
 
 [project.scripts]
-cobgdb-python = "cobgdb_python.backend:main"
-cobgdb-python-gui = "cobgdb_python.frontend:main"
+cobol-debugger-backend = "cobgdb_python.backend:main"
+cobol-debugger = "cobgdb_python.frontend:main"
 
 [tool.setuptools.packages.find]
 include = ["cobgdb_python*"]

@@ -1,24 +1,24 @@
 [Setup]
-AppId=COBGDB-Python
-AppName=COBGDB Python
+AppId=COBOL-Debugger
+AppName=COBOL Debugger
 AppVersion=0.1.0
-DefaultDirName={localappdata}\Programs\COBGDB-Python
-DefaultGroupName=COBGDB Python
+DefaultDirName={localappdata}\Programs\COBOL-Debugger
+DefaultGroupName=COBOL Debugger
 PrivilegesRequired=lowest
 MinVersion=10.0.22000
 ArchitecturesAllowed=x64compatible
-OutputBaseFilename=COBGDB-0.1.0-win11-x64-setup
+OutputBaseFilename=COBOL-Debugger-0.1.0-win11-x64-setup
 SetupIconFile=cobgdb.ico
 Compression=lzma2
 SolidCompression=yes
 
 [Files]
-Source: "{#AppBinary}"; DestDir: "{app}"; DestName: "cobgdb-python-gui.exe"; Flags: ignoreversion
+Source: "{#AppBinary}"; DestDir: "{app}"; DestName: "cobol-debugger.exe"; Flags: ignoreversion
 
 Source: "{#ExampleFiles}\*"; DestDir: "{app}\examples"; Flags: recursesubdirs
 
 [Icons]
-Name: "{group}\COBGDB Python"; Filename: "{app}\cobgdb-python-gui.exe"
+Name: "{group}\COBOL Debugger"; Filename: "{app}\cobol-debugger.exe"
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\cobgdb-python-gui.exe"; ValueType: string; ValueData: "{app}\cobgdb-python-gui.exe"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\cobol-debugger.exe"; ValueType: string; ValueData: "{app}\cobol-debugger.exe"; Flags: uninsdeletekey

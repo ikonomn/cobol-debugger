@@ -1,5 +1,6 @@
+       >>SOURCE FORMAT FREE
 identification division.
-program-id. gui-score.
+program-id. score.
 data division.
 working-storage section.
 01 score pic 9 value 5.

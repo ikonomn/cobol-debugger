@@ -1,16 +1,12 @@
-"""Stage the distributable examples without local build output."""
+"""Stage the complete examples tree, including configuration and runtime data."""
 import argparse
 from pathlib import Path
 import shutil
 
 
 def stage_examples(destination):
-    script_dir = Path(__file__).resolve().parent
-    source = script_dir.parent / 'examples'
-    for entry in (script_dir / 'example-files.txt').read_text(encoding='utf-8').splitlines():
-        target = destination / entry
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source / entry, target)
+    source = Path(__file__).resolve().parents[1] / 'examples'
+    shutil.copytree(source, destination, dirs_exist_ok=True, copy_function=shutil.copy2)
 
 
 if __name__ == '__main__':

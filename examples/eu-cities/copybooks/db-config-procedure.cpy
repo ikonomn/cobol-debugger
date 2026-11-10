@@ -4,7 +4,7 @@
            ACCEPT DB-CONFIG-PATH FROM ENVIRONMENT-VALUE
            IF DB-CONFIG-PATH = SPACES
                IF SQLITE
-                   MOVE "../config/worldcities-sqlite.conf"
+                   MOVE "../config/eu-cities-sqlite.conf"
                        TO DB-CONFIG-PATH
                    DISPLAY "DB_CONFIG_FILE not set; using SQLite"
                ELSE

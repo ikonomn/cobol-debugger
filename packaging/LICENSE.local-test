@@ -1,3 +1,8 @@
-COBGDB Python local test package
+COBOL Debugger local test packaging
 
-Copyright holder and redistribution license have not been specified in the supplied project metadata. These RPM definitions are for private local build/testing. No redistribution license is granted or inferred by packaging. This matches the existing Debian packaging notice; resolve the project license before public redistribution.
+The original debugger software uses the Zero-Clause BSD license in LICENSE.
+The bundled Countries and EU Cities data are adapted from GeoNames under
+CC BY 4.0. See examples/DATA-SOURCES.md for attribution and changes.
+Other imported example material still needs a redistribution review. The code
+license does not grant rights to third-party dependencies or material.
+These combined packages are prepared for local testing pending that review.

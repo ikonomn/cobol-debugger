@@ -1,0 +1,3 @@
+include scripts/example-files.txt
+recursive-include examples *
+global-exclude *.pyc
